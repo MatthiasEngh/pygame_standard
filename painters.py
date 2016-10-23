@@ -1,6 +1,7 @@
 import pygame
 
 
+
 class DefaultPainter:
 	def __init__(self, colorarray):
 		self.colorarray = colorarray
@@ -17,7 +18,6 @@ class HeightPainter(DefaultPainter):
 		self.heightmap = heightmap
 		self.colormap = colormap
 		self.draw()
-
 
 
 
