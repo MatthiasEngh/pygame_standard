@@ -1,10 +1,18 @@
 import pygame
 from pygame_standard.cursor import CURSORRELEASED
+from pygame_standard.colors import GRAY
 
 
 class Screen(pygame.sprite.Group):
-	def __init__(self,screen_id=""):
-		self.screen_id = screen_id
+	def __init__(self,**kwargs):
+		if not "screen_id" in kwargs:
+			screen_id = None
+		else:
+			screen_id = kwargs["screen_id"]
+		if screen_id is None:
+			self.screen_id = ""
+		else:
+			self.screen_id = screen_id
 		pygame.sprite.Group.__init__(self)
 	def add_component(self,component):
 		self.add([component])
@@ -27,12 +35,22 @@ class BackgroundScreen(Screen):
 
 
 class Component(pygame.sprite.Sprite):
-	def __init__(self,rect,image):
+	def __init__(self,rect,image=None):
 		pygame.sprite.Sprite.__init__(self)
-		self.image = image
 		self.rect = rect
+		if image is None:
+			self.image = pygame.Surface(self.rect.size)
+		else:
+			self.image = image
 	def update(self,update_data):
 		pass
+
+
+class Plot(Component):
+	def __init__(self,plot_size,plot_pos=(0,0),**kwargs):
+		rect = pygame.Rect(plot_pos,plot_size)
+		Component.__init__(self,rect)
+		self.image.fill(GRAY)
 
 
 class Button(Component):

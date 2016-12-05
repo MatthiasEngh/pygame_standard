@@ -4,21 +4,15 @@ from pygame_standard.engines import DefaultEngine
 from pygame_standard.content_managers import DefaultCM
 import time
 
-BLACK = (0,0,0)
-RED = (255,0,0)
-GREEN = (0,255,0)
-BLUE = (0,0,255)
-WHITE = (255,255,255)
-
 
 
 
 class Window:
-	def __init__(self,size,engine = DefaultEngine(),screens={},screenorder=None):
+	engines = []
+	def __init__(self,size,screens={},screenorder=None):
 		if not screenorder:
 			screenorder = screens.keys()
 		self.surface = pygame.display.set_mode(size)
-		self.engine = engine
 		self.screens = screens
 		self.screenorder = screenorder
 		self.reversescreenorder = screenorder[::-1]
@@ -31,7 +25,8 @@ class Window:
 	def iterate(self):
 		# unit cycle
 		self.check_events()
-		self.engine.iterate()
+		for engine in self.engines:
+			engine.iterate()
 		self.draw()
 	def check_events(self):
 		# get events
@@ -39,7 +34,8 @@ class Window:
 			pygame.quit()
 			sys.exit()
 		cmevent = self.content_manager.interact()
-		self.engine.events(cmevent)
+		for engine in self.engines:
+			engine.events(cmevent)
 	def draw(self):
 		for screen in self.screenorder:
 			self.screens[screen].draw(self.surface)
@@ -50,10 +46,9 @@ class Window:
 		screensn = len(self.screens)
 		self.screenorder.insert(screensn-level,screen.screen_id)
 		self.reversescreenorder.insert(level,screen.screen_id)
-	def add_active_screen(self,screen,level=0):
-		if not screen.screen_id in self.screens:
-			self.add_screen(screen,level)
-		self.engine.add_screen(screen)
+	def add_engine(self,engine):
+		self.add_screen(engine.get_screen())
+		self.engines.append(engine)
 
 
 
