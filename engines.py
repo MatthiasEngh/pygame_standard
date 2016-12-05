@@ -38,21 +38,27 @@ class Plot(Entity):
 		self.fig = pylab.figure(figsize=[figwidth, figheight],
 		                   dpi=100,
 		                   )
+		self.update_pldv(plot_data)
 		self.plot(plot_data)
 	def update(self,update_data):
 		if "fields" in update_data:
-			if update_data["fields"]["plot_data"].has_changed():
-				self.plot(update_data["fields"]["plot_data"].get_plotdata())
+			plot_data = update_data["fields"]["plot_data"]
+			if plot_data.has_changed(self.pldv):
+				self.update_pldv(plot_data)
+				self.plot(plot_data)
 	def plot(self,plot_data):
-			ax = self.fig.gca()
-			ax.plot(plot_data)
-			canvas = agg.FigureCanvasAgg(self.fig)
-			canvas.draw()
-			renderer = canvas.get_renderer()
-			raw_data = renderer.tostring_rgb()
-			size = canvas.get_width_height()	 
-			plotsurf = pygame.image.fromstring(raw_data, size, "RGB")
-			self.image.blit(plotsurf, (0,0))
+		ax = self.fig.gca()
+		ax.clear()
+		ax.plot(plot_data.get_plotdata())
+		canvas = agg.FigureCanvasAgg(self.fig)
+		canvas.draw()
+		renderer = canvas.get_renderer()
+		raw_data = renderer.tostring_rgb()
+		size = canvas.get_width_height()	 
+		plotsurf = pygame.image.fromstring(raw_data, size, "RGB")
+		self.image.blit(plotsurf, (0,0))
+	def update_pldv(self,plot_data):
+		self.pldv = plot_data.get_version()
 
 
 class DefaultEntityManager:
@@ -67,16 +73,27 @@ class DefaultEntityManager:
 class Field:
 	def __init__(self,id):
 		self.id = id
-	def has_changed(self):
-		return True
+		self.version = 0
+	def has_changed(self,version):
+		return not self.version == version
 	def get_id(self):
 		return self.id
+	def get_version(self):
+		return self.version
+	def update(self):
+		self.version += 1
+
 
 
 class ArrayField(Field):
 	def __init__(self,id,array):
 		Field.__init__(self,id)
 		self.array = array
+	def get_plotdata(self):
+		return self.array
+	def update(self,array):
+		self.array = array
+		Field.update(self)
 
 
 class DefaultFieldManager:
@@ -87,7 +104,7 @@ class DefaultFieldManager:
 		return self.fields
 	def respond(self,event,data):
 		if event in self.responses:
-			self.fields[self.responses[event]['field']] = self.responses[event]['response'](self.fields[self.responses[event]['field']])
+			self.fields[self.responses[event]['field']].update(self.responses[event]['response'](self.fields[self.responses[event]['field']]))
 		else:
 			print "event type %s has no response" % event
 	def add_response(self,event_id,response_fn,field_id):
@@ -101,13 +118,15 @@ class DefaultFieldManager:
 
 
 
+
+
 class DefaultEngine:
 	def __init__(self,fields = {},responses = {},entities = pygame.sprite.Group(),screen_id=None,**kwargs):
 		self.screen = Screen(screen_id=screen_id,**kwargs)
 		self.entity_m = DefaultEntityManager(entities)
 		self.fields_m = DefaultFieldManager(fields,responses)
 	def iterate(self):
-		pass
+		self.entity_m.iterate(self.fields_m.get_fields())
 	def events(self,cmevent,data=None):
 		if cmevent:
 			self.fields_m.respond(cmevent,data)
@@ -144,11 +163,10 @@ class ExampleEngine(DefaultEngine):
 
 
 class MatplotlibEngine(DefaultEngine):
-	def __init__(self,screen_id,plot_size,plot_data,**kwargs):
+	def __init__(self,screen_id,plot_size,data_field,**kwargs):
 		DefaultEngine.__init__(self,screen_id=screen_id)
-		plot = Plot(plot_size,plot_data,**kwargs)
+		plot = Plot(plot_size,data_field,**kwargs)
 		self.add_entity(plot)
-		data_field = ArrayField("plot_data",plot_data)
 		self.add_field(data_field)
 		self.iterate()
 
