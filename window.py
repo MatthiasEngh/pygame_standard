@@ -10,6 +10,7 @@ import time
 class Window:
 	engines = []
 	def __init__(self,size,screens={},screenorder=None):
+		pygame.init()
 		if not screenorder:
 			screenorder = screens.keys()
 		self.surface = pygame.display.set_mode(size)

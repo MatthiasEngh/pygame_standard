@@ -1,6 +1,6 @@
 import pygame
 from pygame_standard.cursor import CURSORRELEASED
-from pygame_standard.colors import GRAY
+from pygame_standard.colors import GRAY, BLACK
 
 
 class Screen(pygame.sprite.Group):
@@ -53,16 +53,36 @@ class Plot(Component):
 		self.image.fill(GRAY)
 
 
+
+
+DEFAULT_BUTTON_FONTSIZE = 20
+DEFAULT_BUTTON_FONT = None
+DEFAULT_BUTTON_AA = 1
+DEFAULT_BUTTON_COLOR = BLACK
+DEFAULT_BUTTON_BG = GRAY
+DEFAULT_BUTTON_ACTIVATED = GRAY
+DEFAULT_BUTTON_ACTIVATED_BG = BLACK
+
+
 class Button(Component):
-	def __init__(self,rect,images,buttonID):
-		self.images = (images*4)[0:4]
-		Component.__init__(self,rect,images[0])
+	def __init__(self,pos,text,buttonID):
+		self.font = pygame.font.Font(DEFAULT_BUTTON_FONT,DEFAULT_BUTTON_FONTSIZE)
+		self.text = text
+		text_surf = self.font.render(self.text,DEFAULT_BUTTON_AA,DEFAULT_BUTTON_COLOR,DEFAULT_BUTTON_BG)
+		text_second = self.font.render(self.text,DEFAULT_BUTTON_AA,DEFAULT_BUTTON_ACTIVATED,DEFAULT_BUTTON_ACTIVATED_BG)
+		self.rect = text_surf.get_rect()
+		self.rect.topleft = pos
+		self.images = [text_surf,text_second]*2
+
+		Component.__init__(self,self.rect,self.images[0])
 		self.ID = buttonID
 	def update(self,update_data):
 		cursorstate = update_data["cursorstate"]
 		self.image = self.images[cursorstate]
 		if cursorstate == CURSORRELEASED:
 			return self.ID
+
+
 
 
 
