@@ -1,7 +1,7 @@
 import pygame
 
 CURSORIDLE = 1
-CURSORCLICKED = 2
+CURSORPRESSED = 2
 CURSORRELEASED = 3
 
 
@@ -17,7 +17,7 @@ class Cursor(pygame.sprite.Sprite):
 		if self.state == CURSORRELEASED:
 			self.state = CURSORIDLE
 		if pygame.event.get(pygame.MOUSEBUTTONDOWN):
-			self.state = CURSORCLICKED
+			self.state = CURSORPRESSED
 		if pygame.event.get(pygame.MOUSEBUTTONUP):
 			self.state = CURSORRELEASED
 		return self.state

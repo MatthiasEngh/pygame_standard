@@ -1,64 +1,6 @@
 import time
 import pygame
 from pygame_standard.content import Screen
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.backends.backend_agg as agg
-import pylab
-
-
-
-class Entity(pygame.sprite.Sprite):
-	def __init__(self,image=None,pos=None):
-		pygame.sprite.Sprite.__init__(self)
-		if not image:
-			self.image = pygame.Surface((1,1))
-		else:
-			self.image = image
-		self.rect = self.image.get_rect()
-		if pos:
-			self.rect.topleft = pos
-	def update(self,update_data):
-		if "fields" in update_data:
-			fields = update_data["fields"]
-			self.rect.top += fields["yfield"]
-			self.rect.left += fields["xfield"]
-
-
-class Plot(Entity):
-	def __init__(self,size,plot_data,**kwargs):
-		image = pygame.Surface(size)
-		image.fill((255,100,0))
-		if "plot_pos" in kwargs:
-			Entity.__init__(self,image,pos=kwargs["plot_pos"])
-		else:
-			Entity.__init__(self,image)
-		figwidth = 4
-		figheight = 4
-		self.fig = pylab.figure(figsize=[figwidth, figheight],
-		                   dpi=100,
-		                   )
-		self.update_pldv(plot_data)
-		self.plot(plot_data)
-	def update(self,update_data):
-		if "fields" in update_data:
-			plot_data = update_data["fields"]["plot_data"]
-			if plot_data.has_changed(self.pldv):
-				self.update_pldv(plot_data)
-				self.plot(plot_data)
-	def plot(self,plot_data):
-		ax = self.fig.gca()
-		ax.clear()
-		ax.plot(plot_data.get_plotdata())
-		canvas = agg.FigureCanvasAgg(self.fig)
-		canvas.draw()
-		renderer = canvas.get_renderer()
-		raw_data = renderer.tostring_rgb()
-		size = canvas.get_width_height()	 
-		plotsurf = pygame.image.fromstring(raw_data, size, "RGB")
-		self.image.blit(plotsurf, (0,0))
-	def update_pldv(self,plot_data):
-		self.pldv = plot_data.get_version()
 
 
 class DefaultEntityManager:
@@ -162,13 +104,6 @@ class ExampleEngine(DefaultEngine):
 
 
 
-class MatplotlibEngine(DefaultEngine):
-	def __init__(self,screen_id,plot_size,data_field,**kwargs):
-		DefaultEngine.__init__(self,screen_id=screen_id)
-		plot = Plot(plot_size,data_field,**kwargs)
-		self.add_entity(plot)
-		self.add_field(data_field)
-		self.iterate()
 
 
 
