@@ -1,7 +1,8 @@
 import pygame
 from pygame_standard.window import Window
 from pygame_standard.content import Screen, Button
-from pygame_standard.engines import MatplotlibEngine, ArrayField
+from pygame_standard.engines import ArrayField
+from pygame_standard.matplotliblib import MatplotlibEngine
 import numpy as np
 
 
@@ -16,7 +17,7 @@ plot_response_id = "plot"
 def data_field_response(*args,**kwargs):
 	return np.random.random(100)
 
-plotting_engine = MatplotlibEngine(screen_id="plot",plot_size=(400,400),data_field=data_field,plot_pos=(100,100))
+plotting_engine = MatplotlibEngine(screen_id="plot",plot_size=(400,400),data_field=data_field,plot_pos=[100,100])
 plotting_engine.add_response(plot_response_id,data_field_response,data_field_id)
 window.add_engine(plotting_engine)
 
