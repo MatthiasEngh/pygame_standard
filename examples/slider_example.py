@@ -1,11 +1,9 @@
-import pygame
 from pygame_standard.window import Window
 from pygame_standard.content import Screen, VerticalSlider
 
 
-size = (600,600)
+size = (100,200)
 window = Window(size)
-
 
 interface_screen = Screen(screen_id="interface")
 
