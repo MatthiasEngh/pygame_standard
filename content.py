@@ -23,6 +23,9 @@ class Panel(pygame.sprite.Sprite):
 			self.panels.add(component)
 		else:
 			self.components.add(component)
+	def add_components(self,components):
+		for component in components:
+			self.add_component(component)
 	def interact(self,cursor):
 		interacted = pygame.sprite.spritecollideany(cursor,self.panels)
 		if not interacted:
@@ -227,10 +230,19 @@ class HorizontalSlider(Slider):
 
 
 
+DEFAULT_SLIDER_ARRAY_SPACING = 10
+
 class VerticalSliderArray(Panel):
 	def __init__(self,pos,height,count,slider_array_id):
-		size = (50,50)
+		new_sliders = []
+		spos = list(pos)
+		for i in range(count):
+			new_slider = VerticalSlider(spos,height,slider_array_id+"_"+str(i))
+			new_sliders.append(new_slider)
+			spos[0] = new_slider.rect.right + DEFAULT_KNOB_RADIUS + DEFAULT_SLIDER_ARRAY_SPACING
+		size = np.subtract(new_slider.rect.bottomright,pos)
 		Panel.__init__(self,pos,size)
+		self.add_components(new_sliders)
 
 
 
