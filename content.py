@@ -4,8 +4,45 @@ from pygame_standard.colors import *
 import numpy as np
 
 
-class Screen(pygame.sprite.Group):
+class PanelGroup(pygame.sprite.LayeredUpdates):
+	def __init__(self):
+		pygame.sprite.LayeredUpdates.__init__(self)
+	def draw(self,surface):
+		for panel in self.sprites():
+			panel.draw(surface)
+
+
+class Panel(pygame.sprite.Sprite):
+	def __init__(self,pos,size):
+		self.components = pygame.sprite.Group()
+		self.panels = PanelGroup()
+		pygame.sprite.Sprite.__init__(self)
+		self.rect = pygame.Rect(pos,size)
+	def add_component(self,component):
+		if isinstance(component, Panel):
+			self.panels.add(component)
+		else:
+			self.components.add(component)
+	def interact(self,cursor):
+		interacted = pygame.sprite.spritecollideany(cursor,self.panels)
+		if not interacted:
+			interacted = pygame.sprite.spritecollideany(cursor,self.components)
+		return interacted
+	def update(self,data):
+		self.components.update(data)
+		self.panels.update(data)
+	def draw(self,surface):
+		self.components.draw(surface)
+		self.panels.draw(surface)
+
+
+
+class Screen:
 	def __init__(self,**kwargs):
+		displayinfo = pygame.display.Info()
+		width = displayinfo.current_w
+		height = displayinfo.current_h
+		self.container =	 Panel((0,0),(width,height))
 		if not "screen_id" in kwargs:
 			screen_id = None
 		else:
@@ -14,9 +51,17 @@ class Screen(pygame.sprite.Group):
 			self.screen_id = ""
 		else:
 			self.screen_id = screen_id
-		pygame.sprite.Group.__init__(self)
-	def add_component(self,component):
-		self.add([component])
+	def add_component(self,component,panel_id=0):
+		self.container.add_component(component)
+	def interact(self,cursor):
+		interacted = self.container
+		while isinstance(interacted, Panel):
+			interacted = interacted.interact(cursor)
+		return interacted
+	def update(self,data):
+		self.container.update(data)
+	def draw(self,surface):
+		self.container.draw(surface)
 
 
 
@@ -25,6 +70,7 @@ class BackgroundSprite(pygame.sprite.Sprite):
 		pygame.sprite.Sprite.__init__(self)
 		self.image = background_image
 		self.rect = background_image.get_rect()
+
 
 
 class BackgroundScreen(Screen):
@@ -50,11 +96,13 @@ class Component(pygame.sprite.Sprite):
 		pass
 
 
+
 class BindingComponent(Component):
 	def update(self,update_data):
 		return self.interact(update_data)
 	def interact(self,update_data):
 		return {'bind':False,'cm_event':None}
+
 
 
 class ClickBinder(BindingComponent):
@@ -86,7 +134,6 @@ class Plot(Component):
 
 
 
-
 DEFAULT_BUTTON_FONTSIZE = 20
 DEFAULT_BUTTON_FONT = None
 DEFAULT_BUTTON_AA = 1
@@ -109,6 +156,7 @@ class Button(ClickBinder):
 		self.ID = buttonID
 	def update_visuals(self,cursorstate):
 		self.image = self.images[cursorstate[0]]
+
 
 
 DEFAULT_KNOB_RADIUS = 15
@@ -169,11 +217,23 @@ class VerticalSlider(Slider):
 		Slider.__init__(self,start,stop,slider_id)
 
 
+
 class HorizontalSlider(Slider):
 	def __init__(self,pos,width):
 		start = list(pos)
 		stop = list(pos)
 		stop[0] = start[0] + width
 		Slider.__init__(self,start,stop,slider_id)
+
+
+
+class VerticalSliderArray(Panel):
+	def __init__(self,pos,height,count,slider_array_id):
+		size = (50,50)
+		Panel.__init__(self,pos,size)
+
+
+
+
 
 

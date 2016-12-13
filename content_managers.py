@@ -26,7 +26,7 @@ class DefaultCM:
 			for screen in self.screens:
 				self.screens[screen].update({"cursorstate":[0,self.cursor.get_pos()]})
 			for screenID in self.screenorder:
-				collided = pygame.sprite.spritecollideany(self.cursor,self.screens[screenID])
+				collided = self.screens[screenID].interact(self.cursor)
 				if collided:
 					break
 			if collided:
