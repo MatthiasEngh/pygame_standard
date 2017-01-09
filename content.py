@@ -35,6 +35,8 @@ class Panel(pygame.sprite.Sprite):
 		self.components.update(data)
 		self.panels.update(data)
 	def draw(self,surface):
+		if hasattr(self,"background"):
+			surface.blit(self.background,self.rect.topleft)
 		self.components.draw(surface)
 		self.panels.draw(surface)
 
@@ -58,9 +60,10 @@ class Screen:
 		self.container.add_component(component)
 	def interact(self,cursor):
 		interacted = self.container
-		while isinstance(interacted, Panel):
+		while (isinstance(interacted, Panel)):
 			interacted = interacted.interact(cursor)
-		return interacted
+			if isinstance(interacted, Interactible):
+				return interacted
 	def update(self,data):
 		self.container.update(data)
 	def draw(self,surface):
@@ -94,22 +97,28 @@ class Component(pygame.sprite.Sprite):
 			self.image = image
 		self.ID = None
 	def update(self,update_data):
-		return {'bind':False,'cm_event':self.interact(update_data)}
-	def interact(self,update_data):
 		pass
+	def get_rect(self):
+		return self.rect
+	def get_size(self):
+		return self.rect.size
 
 
+class Interactible(Component):
+	def __init__(self,rect,image=None):
+		Component.__init__(self,rect,image)
+	def interact_element(self,update_data):
+		return None
 
-class BindingComponent(Component):
+
+def return_event(binding,cm_event):
+	return {'bind':binding,'cm_event':cm_event}
+
+
+class ClickBinder(Interactible):
+	binding = False
 	def update(self,update_data):
 		return self.interact(update_data)
-	def interact(self,update_data):
-		return {'bind':False,'cm_event':None}
-
-
-
-class ClickBinder(BindingComponent):
-	binding = False
 	def interact(self,update_data):
 		cursorstate = update_data["cursorstate"]
 		self.update_visuals(cursorstate)
@@ -121,7 +130,7 @@ class ClickBinder(BindingComponent):
 			cm_event = [self.ID,CURSORPRESSED]
 		else:
 			cm_event = None
-		return {'bind':self.binding,'cm_event':cm_event}
+		return return_event(self.binding, cm_event)
 	def update_visuals(self,cursorstate):
 		pass
 
@@ -136,6 +145,22 @@ class Plot(Component):
 		self.image.fill(GRAY)
 
 
+DEFAULT_FONT = None
+DEFAULT_FONTSIZE = 20
+DEFAULT_FONT_AA = 1
+DEFAULT_FONT_COLOR = GRAY
+DEFAULT_FONT_BG = None
+
+class Text(Component):
+	def __init__(self,pos,font_size,text):
+		self.font = pygame.font.Font(DEFAULT_FONT,font_size)
+		image = self.font.render(text,DEFAULT_FONT_AA,DEFAULT_FONT_COLOR,DEFAULT_FONT_BG)
+		image.set_colorkey(BLACK)
+		rect = image.get_rect()
+		rect.topleft = pos
+		Component.__init__(self,rect,image)
+
+
 
 DEFAULT_BUTTON_FONTSIZE = 20
 DEFAULT_BUTTON_FONT = None
@@ -144,21 +169,26 @@ DEFAULT_BUTTON_COLOR = BLACK
 DEFAULT_BUTTON_BG = GRAY
 DEFAULT_BUTTON_ACTIVATED = GRAY
 DEFAULT_BUTTON_ACTIVATED_BG = BLACK
+DEFAULT_BUTTON_BORDER = GRAY
+DEFAULT_BUTTON_BORDER_WIDTH = 1
 
 
-class Button(ClickBinder):
-	def __init__(self,pos,text,buttonID):
-		self.font = pygame.font.Font(DEFAULT_BUTTON_FONT,DEFAULT_BUTTON_FONTSIZE)
+class Button(Interactible,Panel):
+	def __init__(self,pos,text,buttonID,border_width=DEFAULT_BUTTON_BORDER_WIDTH):
 		self.text = text
-		text_surf = self.font.render(self.text,DEFAULT_BUTTON_AA,DEFAULT_BUTTON_COLOR,DEFAULT_BUTTON_BG)
-		text_second = self.font.render(self.text,DEFAULT_BUTTON_AA,DEFAULT_BUTTON_ACTIVATED,DEFAULT_BUTTON_ACTIVATED_BG)
-		self.rect = text_surf.get_rect()
-		self.rect.topleft = pos
-		self.images = [text_surf,text_second]*2
-		Component.__init__(self,self.rect,self.images[0])
+		textElement = Text(pos,DEFAULT_BUTTON_FONTSIZE,text)
+		Panel.__init__(self,pos,textElement.get_size())
+		self.add_component(textElement)
+		self.background = pygame.Surface(self.rect.size)
+		border_rect = self.background.get_rect()
+		Interactible.__init__(self,self.rect)
+		pygame.draw.rect(self.background,DEFAULT_BUTTON_BORDER,border_rect,border_width)
 		self.ID = buttonID
 	def update_visuals(self,cursorstate):
-		self.image = self.images[cursorstate[0]]
+		pass
+	def interact_element(self,data):
+		if data['cursorstate'][0] == CURSORRELEASED:
+			return return_event(False,self.ID)
 
 
 
@@ -243,8 +273,6 @@ class VerticalSliderArray(Panel):
 		size = np.subtract(new_slider.rect.bottomright,pos)
 		Panel.__init__(self,pos,size)
 		self.add_components(new_sliders)
-
-
 
 
 

@@ -23,10 +23,11 @@ window.add_engine(plotting_engine)
 
 interface_screen = Screen(screen_id="interface")
 cb_pos =(50,50)
-cb_text = "Calculate"
+cb_text = "button"
 cb = Button(cb_pos,cb_text,plot_response_id)
 interface_screen.add_component(cb)
 window.add_screen(interface_screen)
+
 
 window.run()
 

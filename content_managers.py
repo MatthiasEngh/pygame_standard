@@ -8,34 +8,40 @@ from pygame_standard.cursor import Cursor
 class DefaultCM:
 	def __init__(self,screens,screenorder):
 		self.screens = screens
-		self.screenorder = screenorder
 		self.cursor = Cursor()
 		self.bound = None
 	def interact(self):
 		if pygame.event.get(pygame.MOUSEMOTION):
 			self.cursor.move()
-		collided = None
+		self.cursor.clickcheck()
+		interactible = None
 		if self.bound:
-			result = self.bound.update({"cursorstate":[self.cursor.clickcheck(),self.cursor.get_pos()]})
+			result = self.bound.update({"cursorstate":[self.cursor.get_state(),self.cursor.get_pos()]})
 			if result:
+				print result
 				if not result['bind']:
-					print "releasing element", result['cm_event'][0]
 					self.bound = None
 				return result['cm_event']
 		else:
-			for screen in self.screens:
-				self.screens[screen].update({"cursorstate":[0,self.cursor.get_pos()]})
-			for screenID in self.screenorder:
-				collided = self.screens[screenID].interact(self.cursor)
-				if collided:
-					break
-			if collided:
-				result = collided.update({"cursorstate":[self.cursor.clickcheck(),self.cursor.get_pos()]})
-				if result:
-					if result['bind']:
-						print "binding element", result['cm_event'][0]
-						self.bound = collided
-					return result['cm_event']
+			interactible = self.hover_and_release()
+			if interactible:
+				return self.interact_element(interactible)
+	def hover_and_release(self):
+		interactible = None
+		for screen in self.screens:
+			self.screens[screen].update({"cursorstate":[0,self.cursor.get_pos()]})
+			if not interactible:
+				interactible = self.screens[screen].interact(self.cursor)
+		return interactible
+	def interact_element(self,interactible):
+		result = interactible.interact_element({"cursorstate":[self.cursor.get_state(),self.cursor.get_pos()]})
+		if result:
+			if result['bind']:
+				self.bound = interactible
+			return result['cm_event']
+
+
+
 
 
 

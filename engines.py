@@ -46,7 +46,10 @@ class DefaultFieldManager:
 		return self.fields
 	def respond(self,event,data):
 		if event in self.responses:
-			self.fields[self.responses[event]['field']].update(self.responses[event]['response'](self.fields[self.responses[event]['field']]))
+			field_id = self.responses[event]['field']
+			response = self.responses[event]['response']
+			result = response(self.fields[field_id],data)
+			self.fields[field_id].update(result)
 		else:
 			print "event type %s has no response" % event
 	def add_response(self,event_id,response_fn,field_id):
