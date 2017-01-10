@@ -118,8 +118,8 @@ def return_event(binding,cm_event):
 class ClickBinder(Interactible):
 	binding = False
 	def update(self,update_data):
-		return self.interact(update_data)
-	def interact(self,update_data):
+		self.update_visuals(update_data)
+	def interact_element(self,update_data):
 		cursorstate = update_data["cursorstate"]
 		self.update_visuals(cursorstate)
 		if cursorstate[0] == CURSORRELEASED:

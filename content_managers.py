@@ -16,9 +16,8 @@ class DefaultCM:
 		self.cursor.clickcheck()
 		interactible = None
 		if self.bound:
-			result = self.bound.update({"cursorstate":[self.cursor.get_state(),self.cursor.get_pos()]})
+			result = self.bound.interact_element({"cursorstate":[self.cursor.get_state(),self.cursor.get_pos()]})
 			if result:
-				print result
 				if not result['bind']:
 					self.bound = None
 				return result['cm_event']
