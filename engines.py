@@ -44,10 +44,13 @@ class DefaultFieldManager:
 		self.responses = responses
 	def get_fields(self):
 		return self.fields
-	def respond(self,event,data):
+	def respond(self,event):
 		if event in self.responses:
 			field_id = self.responses[event]['field']
 			response = self.responses[event]['response']
+			data = None
+			if 'data' in self.responses[event]:
+				data = self.responses[event]['data']
 			result = response(self.fields[field_id],data)
 			self.fields[field_id].update(result)
 		else:
@@ -72,9 +75,9 @@ class DefaultEngine:
 		self.fields_m = DefaultFieldManager(fields,responses)
 	def iterate(self):
 		self.entity_m.iterate(self.fields_m.get_fields())
-	def events(self,cmevent,data=None):
+	def events(self,cmevent):
 		if cmevent:
-			self.fields_m.respond(cmevent,data)
+			self.fields_m.respond(cmevent)
 	def get_screen(self):
 		return self.screen
 	def add_entity(self,entity):
@@ -97,9 +100,9 @@ class ExampleEngine(DefaultEngine):
 		# check events and walk program state
 		self.entity_m.iterate(self.fields_m.get_fields())
 		return []
-	def events(self,cmevent,data = None):
+	def events(self,cmevent):
 		if cmevent:
-			self.fields_m.respond(cmevent,data)
+			self.fields_m.respond(cmevent)
 		else:
 			for event in pygame.event.get(pygame.KEYDOWN):
 				self.fields_m.respond(event.key)

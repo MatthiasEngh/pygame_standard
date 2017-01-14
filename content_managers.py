@@ -20,7 +20,7 @@ class DefaultCM:
 			if result:
 				if not result['bind']:
 					self.bound = None
-				return result['cm_event']
+				return result
 		else:
 			interactible = self.hover_and_release()
 			if interactible:
@@ -37,7 +37,7 @@ class DefaultCM:
 		if result:
 			if result['bind']:
 				self.bound = interactible
-			return result['cm_event']
+			return result
 
 
 

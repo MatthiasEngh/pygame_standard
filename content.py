@@ -4,6 +4,11 @@ from pygame_standard.colors import *
 import numpy as np
 
 
+class Form:
+	def add(self,component,track_changes=False):
+		pass
+
+
 class PanelGroup(pygame.sprite.LayeredUpdates):
 	def __init__(self):
 		pygame.sprite.LayeredUpdates.__init__(self)
@@ -111,8 +116,8 @@ class Interactible(Component):
 		return None
 
 
-def return_event(binding,cm_event):
-	return {'bind':binding,'cm_event':cm_event}
+def create_event(binding,element_id,cursorstate):
+	return {'bind':binding,'element_id':element_id,"cursorstate":cursorstate}
 
 
 class ClickBinder(Interactible):
@@ -124,13 +129,13 @@ class ClickBinder(Interactible):
 		self.update_visuals(cursorstate)
 		if cursorstate[0] == CURSORRELEASED:
 			self.binding = False
-			cm_event = [self.ID,CURSORRELEASED]
+			cm_event = create_event(self.binding, self.ID, cursorstate[0])
 		elif cursorstate[0] == CURSORPRESSED:
 			self.binding = True
-			cm_event = [self.ID,CURSORPRESSED]
+			cm_event = create_event(self.binding, self.ID, cursorstate[0])
 		else:
 			cm_event = None
-		return return_event(self.binding, cm_event)
+		return cm_event
 	def update_visuals(self,cursorstate):
 		pass
 
@@ -203,7 +208,7 @@ DEFAULT_SLIDER_BORDER = 2
 
 
 class Slider(ClickBinder):
-	def __init__(self,start,stop,slider_id):
+	def __init__(self,start,stop,slider_id,track_changes=False):
 		self.value = 0
 		self.start = start
 		self.stop = stop

@@ -2,6 +2,7 @@ import pygame
 import sys
 from pygame_standard.engines import DefaultEngine
 from pygame_standard.content_managers import DefaultCM
+from pygame_standard.form_managers import DefaultFM
 import time
 
 
@@ -18,6 +19,7 @@ class Window:
 		self.screenorder = screenorder
 		self.reversescreenorder = screenorder[::-1]
 		self.content_manager = DefaultCM(screens,self.reversescreenorder)
+		self.form_manager = DefaultFM()
 	def run(self):
 		# main loop
 		while True:
@@ -35,6 +37,8 @@ class Window:
 			pygame.quit()
 			sys.exit()
 		cmevent = self.content_manager.interact()
+		if cmevent:
+			cmevent = self.form_manager.check_event(cmevent)
 		for engine in self.engines:
 			engine.events(cmevent)
 	def draw(self):
@@ -50,6 +54,11 @@ class Window:
 	def add_engine(self,engine):
 		self.add_screen(engine.get_screen())
 		self.engines.append(engine)
+	def add_form(self,form):
+		self.form_manager.add(form)
+	def add_forms(self,forms):
+		for form in forms:
+			self.add_form(form)
 
 
 
