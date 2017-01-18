@@ -39,6 +39,7 @@ class Window:
 		cmevent = self.content_manager.interact()
 		if cmevent:
 			cmevent = self.form_manager.check_event(cmevent)
+			print cmevent
 		for engine in self.engines:
 			engine.events(cmevent)
 	def draw(self):

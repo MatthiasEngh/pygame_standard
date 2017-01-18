@@ -5,10 +5,14 @@
 
 
 class DefaultFM:
+	forms = []
 	def add(self,form):
-		pass
+		self.forms.append(form)
 	def check_event(self,event):
-		event['element_id']
+		for form in self.forms:
+			if hasattr(form, 'event'):
+				if form.event == event['element_id']:
+					return form.add_event_data(event)
 		return event
 
 

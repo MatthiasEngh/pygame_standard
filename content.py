@@ -4,9 +4,6 @@ from pygame_standard.colors import *
 import numpy as np
 
 
-class Form:
-	def add(self,component,track_changes=False):
-		pass
 
 
 class PanelGroup(pygame.sprite.LayeredUpdates):
@@ -93,25 +90,27 @@ class BackgroundScreen(Screen):
 
 
 class Component(pygame.sprite.Sprite):
-	def __init__(self,rect,image=None):
+	def __init__(self,rect,ID,image=None):
 		pygame.sprite.Sprite.__init__(self)
 		self.rect = rect
 		if image is None:
 			self.image = pygame.Surface(self.rect.size)
 		else:
 			self.image = image
-		self.ID = None
+		self.ID = ID
 	def update(self,update_data):
 		pass
 	def get_rect(self):
 		return self.rect
 	def get_size(self):
 		return self.rect.size
+	def get_id(self):
+		return self.ID
 
 
 class Interactible(Component):
-	def __init__(self,rect,image=None):
-		Component.__init__(self,rect,image)
+	def __init__(self,rect,ID,image=None):
+		Component.__init__(self,rect,ID,image)
 	def interact_element(self,update_data):
 		return None
 
@@ -140,14 +139,23 @@ class ClickBinder(Interactible):
 		pass
 
 
+class ValueMixin:
+	def __init__(self,value):
+		self.value = value
+	def get_value(self):
+		return self.value
+	def set_value(self,value):
+		self.value = value
+
 
 class Plot(Component):
-	def __init__(self,plot_size,plot_pos=(0,0),**kwargs):
+	def __init__(self,plot_size,ID,plot_pos=(0,0),**kwargs):
 		print plot_size
 		print plot_pos
 		rect = pygame.Rect(plot_pos,plot_size)
-		Component.__init__(self,rect)
+		Component.__init__(self,rect,ID)
 		self.image.fill(GRAY)
+
 
 
 DEFAULT_FONT = None
@@ -156,14 +164,15 @@ DEFAULT_FONT_AA = 1
 DEFAULT_FONT_COLOR = GRAY
 DEFAULT_FONT_BG = None
 
-class Text(Component):
-	def __init__(self,pos,font_size,text):
+class Text(Component,ValueMixin):
+	def __init__(self,pos,font_size,text,ID):
 		self.font = pygame.font.Font(DEFAULT_FONT,font_size)
 		image = self.font.render(text,DEFAULT_FONT_AA,DEFAULT_FONT_COLOR,DEFAULT_FONT_BG)
 		image.set_colorkey(BLACK)
 		rect = image.get_rect()
 		rect.topleft = pos
-		Component.__init__(self,rect,image)
+		Component.__init__(self,rect,ID,image)
+		ValueMixin.__init__(self,text)
 
 
 
@@ -186,9 +195,8 @@ class Button(Interactible,Panel):
 		self.add_component(textElement)
 		self.background = pygame.Surface(self.rect.size)
 		border_rect = self.background.get_rect()
-		Interactible.__init__(self,self.rect)
+		Interactible.__init__(self,self.rect,buttonID)
 		pygame.draw.rect(self.background,DEFAULT_BUTTON_BORDER,border_rect,border_width)
-		self.ID = buttonID
 	def update_visuals(self,cursorstate):
 		pass
 	def interact_element(self,data):
@@ -207,19 +215,18 @@ pygame.draw.circle(DEFAULT_SLIDER_KNOB_SURF,GRAY,(DEFAULT_KNOB_RADIUS,DEFAULT_KN
 DEFAULT_SLIDER_BORDER = 2
 
 
-class Slider(ClickBinder):
-	def __init__(self,start,stop,slider_id,track_changes=False):
-		self.value = 0
+class Slider(ClickBinder,ValueMixin):
+	def __init__(self,start,stop,slider_id):
+		ValueMixin.__init__(self,0)
 		self.start = start
 		self.stop = stop
 		self.v = np.subtract(stop,start)
 		self.unit_v = np.divide(self.v,np.linalg.norm(self.v))
 		self.size = [abs(stop[0]-start[0])+DEFAULT_KNOB_DIAMETER,abs(stop[1]-start[1])+DEFAULT_KNOB_DIAMETER]
 		self.pos = [min(start[0],stop[0])-DEFAULT_KNOB_RADIUS,min(start[1],stop[1])-DEFAULT_KNOB_RADIUS]
-		self.rect = pygame.Rect(self.pos,self.size)
+		rect = pygame.Rect(self.pos,self.size)
+		ClickBinder.__init__(self,rect,slider_id,image=pygame.Surface(self.size))
 		self.draw()
-		Component.__init__(self,self.rect,self.image)
-		self.ID = slider_id
 	def knob_location(self,value):
 		posx = self.start[0] + value*(self.stop[0] - self.start[0])
 		posy = self.start[1] + value*(self.stop[1]-self.start[1])
@@ -230,7 +237,6 @@ class Slider(ClickBinder):
 			self.adjust_value(cursorstate[1])
 			self.draw()
 	def draw(self):
-		self.image = pygame.Surface(self.size)
 		pygame.draw.line(self.image,GRAY,self.knob_location(0),self.knob_location(1),DEFAULT_KNOB_RADIUS)
 		pygame.draw.line(self.image,BLACK,np.subtract(self.knob_location(0),[0,DEFAULT_SLIDER_BORDER]),np.add(self.knob_location(1),[0,DEFAULT_SLIDER_BORDER]),DEFAULT_KNOB_RADIUS-DEFAULT_SLIDER_BORDER)
 		knob_rect = DEFAULT_SLIDER_KNOB_RECT.copy()
@@ -257,7 +263,7 @@ class VerticalSlider(Slider):
 
 
 class HorizontalSlider(Slider):
-	def __init__(self,pos,width):
+	def __init__(self,pos,width,slider_id):
 		start = list(pos)
 		stop = list(pos)
 		stop[0] = start[0] + width
@@ -266,6 +272,7 @@ class HorizontalSlider(Slider):
 
 
 DEFAULT_SLIDER_ARRAY_SPACING = 10
+
 
 class VerticalSliderArray(Panel):
 	def __init__(self,pos,height,count,slider_array_id):
