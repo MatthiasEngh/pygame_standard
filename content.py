@@ -190,7 +190,7 @@ DEFAULT_BUTTON_BORDER_WIDTH = 1
 class Button(Interactible,Panel):
 	def __init__(self,pos,text,buttonID,border_width=DEFAULT_BUTTON_BORDER_WIDTH):
 		self.text = text
-		textElement = Text(pos,DEFAULT_BUTTON_FONTSIZE,text)
+		textElement = Text(pos,DEFAULT_BUTTON_FONTSIZE,text,buttonID + 'text')
 		Panel.__init__(self,pos,textElement.get_size())
 		self.add_component(textElement)
 		self.background = pygame.Surface(self.rect.size)
@@ -201,7 +201,7 @@ class Button(Interactible,Panel):
 		pass
 	def interact_element(self,data):
 		if data['cursorstate'][0] == CURSORRELEASED:
-			return return_event(False,self.ID)
+			return create_event(False,self.ID,data['cursorstate'][0])
 
 
 

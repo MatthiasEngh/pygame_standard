@@ -45,12 +45,13 @@ class DefaultFieldManager:
 	def get_fields(self):
 		return self.fields
 	def respond(self,event):
-		if event in self.responses:
-			field_id = self.responses[event]['field']
-			response = self.responses[event]['response']
+		event_id = event['element_id']
+		if event_id in self.responses:
+			field_id = self.responses[event_id]['field']
+			response = self.responses[event_id]['response']
 			data = None
-			if 'data' in self.responses[event]:
-				data = self.responses[event]['data']
+			if 'data' in self.responses[event_id]:
+				data = self.responses[event_id]['data']
 			result = response(self.fields[field_id],data)
 			self.fields[field_id].update(result)
 		else:

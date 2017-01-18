@@ -24,3 +24,7 @@ class Form:
 	def set_values(self,vaue_dict):
 		for element_id in value_dict:
 			self.components[element_id].set_value(value_dict[element_id])
+	def has_event(self,event):
+		if event['element_id'] == self.event:
+			return True
+
