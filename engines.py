@@ -66,8 +66,6 @@ class DefaultFieldManager:
 	def add_fields(self,fields):
 		for field in fields:
 			self.add_field(field)
-	def return_formdata(self):
-		return None # returns a dict with field data matched with form elements
 
 
 
@@ -81,7 +79,7 @@ class DefaultEngine:
 		self.fields_m = DefaultFieldManager(fields,responses)
 	def iterate(self):
 		self.entity_m.iterate(self.fields_m.get_fields())
-		return self.fields_m.return_formdata()
+		return self.fields_m.return_formdata() # engines needs to compile form data since here different fields should be accessed ... this will throw an error now
 	def events(self,cmevent):
 		if cmevent:
 			self.fields_m.respond(cmevent)
