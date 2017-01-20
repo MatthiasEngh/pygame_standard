@@ -20,6 +20,7 @@ class Window:
 		self.reversescreenorder = screenorder[::-1]
 		self.content_manager = DefaultCM(screens,self.reversescreenorder)
 		self.form_manager = DefaultFM()
+		self.engine_events = []
 	def run(self):
 		# main loop
 		while True:
@@ -29,17 +30,22 @@ class Window:
 		# unit cycle
 		self.check_events()
 		for engine in self.engines:
-			engine.iterate()
+			engine_event = engine.iterate()
+			if engine_event:
+				self.engine_events.append(engine_event)
 		self.draw()
 	def check_events(self):
 		# get events
 		if pygame.event.get(pygame.QUIT):
 			pygame.quit()
 			sys.exit()
+		if len(self.engine_events):
+			for engine_event in self.engine_events:
+				print engine_event
+				self.form_manager.update_forms(engine_event)
 		cmevent = self.content_manager.interact()
 		if cmevent:
 			cmevent = self.form_manager.check_event(cmevent)
-			print cmevent
 		for engine in self.engines:
 			engine.events(cmevent)
 	def draw(self):

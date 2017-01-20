@@ -7,7 +7,8 @@ MODES = [
 ]
 
 class Form:
-	def __init__(self):
+	def __init__(self,ID):
+		self.ID = ID
 		self.components = {}
 	def add(self,component,mode=None):
 		self.components[component.get_id()] = component
@@ -15,11 +16,13 @@ class Form:
 			self.event = component.get_id()
 	def add_event_data(self,event):
 		event['form_data'] = self.get_values()
+		event['element_id'] = self.ID
 		return event
 	def get_values(self):
-		form_data = []
-		for component in self.components:
-			form_data.append(self.components[component].get_value())
+		form_data = {}
+		for component_id in self.components:
+			component = self.components[component_id]
+			form_data[component.get_id()] = component.get_value()
 		return form_data
 	def set_values(self,vaue_dict):
 		for element_id in value_dict:

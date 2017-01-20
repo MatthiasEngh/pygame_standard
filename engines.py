@@ -13,7 +13,8 @@ class DefaultEntityManager:
 
 
 class Field:
-	def __init__(self,id):
+	def __init__(self,id,init_data=None):
+		self.data = init_data
 		self.id = id
 		self.version = 0
 	def has_changed(self,version):
@@ -22,7 +23,8 @@ class Field:
 		return self.id
 	def get_version(self):
 		return self.version
-	def update(self):
+	def update(self,data):
+		self.data = data
 		self.version += 1
 
 
@@ -50,10 +52,11 @@ class DefaultFieldManager:
 			field_id = self.responses[event_id]['field']
 			response = self.responses[event_id]['response']
 			data = None
-			if 'data' in self.responses[event_id]:
-				data = self.responses[event_id]['data']
+			if 'form_data' in event:
+				data = event['form_data']
 			result = response(self.fields[field_id],data)
-			self.fields[field_id].update(result)
+			if result is not None:
+				self.fields[field_id].update(result)
 		else:
 			print "event type %s has no response" % event
 	def add_response(self,event_id,response_fn,field_id):
@@ -63,6 +66,8 @@ class DefaultFieldManager:
 	def add_fields(self,fields):
 		for field in fields:
 			self.add_field(field)
+	def return_formdata(self):
+		return None # returns a dict with field data matched with form elements
 
 
 
@@ -76,6 +81,7 @@ class DefaultEngine:
 		self.fields_m = DefaultFieldManager(fields,responses)
 	def iterate(self):
 		self.entity_m.iterate(self.fields_m.get_fields())
+		return self.fields_m.return_formdata()
 	def events(self,cmevent):
 		if cmevent:
 			self.fields_m.respond(cmevent)
