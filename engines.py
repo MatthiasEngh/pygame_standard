@@ -14,18 +14,37 @@ class DefaultEntityManager:
 
 class Field:
 	def __init__(self,id,init_data=None):
-		self.data = init_data
+		self.value = init_data
 		self.id = id
 		self.version = 0
+		self.masters = []
+		self.subjects = []
 	def has_changed(self,version):
 		return not self.version == version
 	def get_id(self):
 		return self.id
 	def get_version(self):
 		return self.version
-	def update(self,data):
-		self.data = data
+	def set_value(self,value):
+		self.value = value
 		self.version += 1
+	def get_value(self):
+		return self.value
+	def update_value(self,value):
+		if value != self.value:
+			self.set_value(value)
+	def master(self,component):
+		self.subjects.append(component.get_id())
+	def subject(self,component):
+		self.masters.append(component.get_id())
+	def has_masters(self):
+		return len(self.masters) > 0
+	def get_masters(self):
+		return self.masters
+	def has_subjects(self):
+		return len(self.subjects) > 0
+	def get_subjects(self):
+		return self.subjects
 
 
 
@@ -41,31 +60,38 @@ class ArrayField(Field):
 
 
 class DefaultFieldManager:
-	def __init__(self,fields={},responses = {}):
+	def __init__(self,fields={}):
 		self.fields = fields
-		self.responses = responses
+		self.masters = {}
+		self.master_fields = []
 	def get_fields(self):
 		return self.fields
-	def respond(self,event):
-		event_id = event['element_id']
-		if event_id in self.responses:
-			field_id = self.responses[event_id]['field']
-			response = self.responses[event_id]['response']
-			data = None
-			if 'form_data' in event:
-				data = event['form_data']
-			result = response(self.fields[field_id],data)
-			if result is not None:
-				self.fields[field_id].update(result)
-		else:
-			print "event type %s has no response" % event
-	def add_response(self,event_id,response_fn,field_id):
-		self.responses[event_id] = {'response':response_fn,'field':field_id}
 	def add_field(self,field):
 		self.fields[field.get_id()] = field
+		if field.has_masters():
+			for master in field.get_masters():
+				self.assign_master(master,field)
+		if field.has_subjects():
+			self.master_fields.append(field)
+	def assign_master(self,master,field):
+		if master in self.masters:
+			self.masters[master].append(field)
+		else:
+			self.masters[master] = [field]
 	def add_fields(self,fields):
 		for field in fields:
 			self.add_field(field)
+	def return_formdata(self):
+		update_data = {}
+		for mf in self.master_fields:
+			for s in mf.get_subjects():
+				update_data[s] = mf.get_value()
+		return update_data
+	def update_fields(self,data):
+		for cid in data['components']:
+			if cid in self.masters:
+				for subject in self.masters[cid]:
+					subject.update_value(data[cid])
 
 
 
@@ -73,29 +99,39 @@ class DefaultFieldManager:
 
 
 class DefaultEngine:
-	def __init__(self,fields = {},responses = {},entities = pygame.sprite.Group(),screen_id=None,**kwargs):
+	def __init__(self,fields = {},entities = pygame.sprite.Group(),screen_id=None,mechanics=[],**kwargs):
 		self.screen = Screen(screen_id=screen_id,**kwargs)
 		self.entity_m = DefaultEntityManager(entities)
-		self.fields_m = DefaultFieldManager(fields,responses)
+		self.fields_m = DefaultFieldManager(fields)
+		self.mechanics = mechanics
 	def iterate(self):
 		self.entity_m.iterate(self.fields_m.get_fields())
-		return self.fields_m.return_formdata() # engines needs to compile form data since here different fields should be accessed ... this will throw an error now
-	def events(self,cmevent):
-		if cmevent:
-			self.fields_m.respond(cmevent)
+		self.calculate()
+		return self.fields_m.return_formdata()
 	def get_screen(self):
 		return self.screen
 	def add_entity(self,entity):
 		self.screen.add_component(entity)
 		self.entity_m.add_entity(entity)
-	def add_field(self,field):
-		self.fields_m.add_field(field)
 	def add_response(self,event_id,response_fn,field_id):
 		self.fields_m.add_response(event_id,response_fn,field_id)
+	def add_field(self,field):
+		self.fields_m.add_field(field)
 	def add_fields(self,fields):
 		self.fields_m.add_fields(fields)
+	def add_mechanic(self,mechanic,index=None):
+		if index is None:
+			self.mechanics.append(mechanic)
+		else:
+			self.mechanics.insert(index,mechanic)
 	def get_screen(self):
 		return self.screen
+	def calculate(self):
+		for mechanic in self.mechanics:
+			field_data = self.fields_m.get_calcdata(mechanic)
+			self.fields_m.update(mechanic)
+	def update_fields(self,data):
+		self.fields_m.update_fields(data)
 
 
 class ExampleEngine(DefaultEngine):

@@ -16,15 +16,12 @@ class DefaultCM:
 		self.cursor.clickcheck()
 		interactible = None
 		if self.bound:
-			result = self.bound.interact_element({"cursorstate":[self.cursor.get_state(),self.cursor.get_pos()]})
-			if result:
-				if not result['bind']:
-					self.bound = None
-				return result
+			return self.interact_element(self.bound)
 		else:
 			interactible = self.hover_and_release()
 			if interactible:
 				return self.interact_element(interactible)
+
 	def hover_and_release(self):
 		interactible = None
 		for screen in self.screens:
@@ -37,10 +34,9 @@ class DefaultCM:
 		if result:
 			if result['bind']:
 				self.bound = interactible
-			return result
-
-
-
+			else:
+				self.bound = None
+			return {'components':[result['element_id']],result['element_id']:result['value']}
 
 
 

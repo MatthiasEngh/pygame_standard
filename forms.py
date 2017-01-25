@@ -1,33 +1,40 @@
 
 
-TRACK_CHANGES = 0
-
-MODES = [
-	TRACK_CHANGES,
-]
 
 class Form:
 	def __init__(self,ID):
 		self.ID = ID
 		self.components = {}
-	def add(self,component,mode=None):
+		self.attachments = []
+		self.trigger = None
+	def add_component(self,component):
 		self.components[component.get_id()] = component
-		if mode in MODES:
-			self.event = component.get_id()
+	def add_trigger(self,trigger):
+		self.add_component(trigger)
+		self.trigger = trigger.get_id()
+	def add_attachment(self,attachment):
+		self.components.add(attachment)
+		self.attachments.append(attachment.get_id())
 	def add_event_data(self,event):
-		event['form_data'] = self.get_values()
-		event['element_id'] = self.ID
+		event['components'].extend(self.attachments)
+		for cid in self.attachments:
+			event[cid] = self.components[cid].get_value()
+		event['form'] = self.ID
 		return event
-	def get_values(self):
-		form_data = {}
-		for component_id in self.components:
-			component = self.components[component_id]
-			form_data[component.get_id()] = component.get_value()
-		return form_data
-	def set_values(self,vaue_dict):
-		for element_id in value_dict:
-			self.components[element_id].set_value(value_dict[element_id])
-	def has_event(self,event):
-		if event['element_id'] == self.event:
-			return True
+	def triggered(self,event):
+		return self.trigger == event['components'][0]
+	def get_id(self):
+		return self.ID
 
+
+RECEIVERFORMID = "receiver_form"
+
+class ReceiverForm(Form):
+	def __init__(self):
+		self.receivers = {}
+		Form.__init__(self,RECEIVERFORMID)
+	def receive(self,data):
+		for receiver in data:
+			self.receivers[receiver].set_value(data[receiver])
+	def add_receiver(self,receiver):
+		self.receivers[receiver.get_id()] = receiver

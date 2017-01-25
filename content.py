@@ -106,6 +106,8 @@ class Component(pygame.sprite.Sprite):
 		return self.rect.size
 	def get_id(self):
 		return self.ID
+	def get_value(self):
+		pass
 
 
 class Interactible(Component):
@@ -115,8 +117,8 @@ class Interactible(Component):
 		return None
 
 
-def create_event(binding,element_id,cursorstate):
-	return {'bind':binding,'element_id':element_id,"cursorstate":cursorstate}
+def create_event(binding,element_id,value):
+	return {'bind':binding, 'element_id':element_id,'value': value}
 
 
 class ClickBinder(Interactible):
@@ -128,15 +130,14 @@ class ClickBinder(Interactible):
 		self.update_visuals(cursorstate)
 		if cursorstate[0] == CURSORRELEASED:
 			self.binding = False
-			cm_event = create_event(self.binding, self.ID, cursorstate[0])
+			return self.create_event()
 		elif cursorstate[0] == CURSORPRESSED:
 			self.binding = True
-			cm_event = create_event(self.binding, self.ID, cursorstate[0])
-		else:
-			cm_event = None
-		return cm_event
+			return self.create_event()
 	def update_visuals(self,cursorstate):
 		pass
+	def create_event(self):
+		return create_event(self.binding,self.ID,self.get_value())
 
 
 class ValueMixin:
@@ -215,7 +216,7 @@ pygame.draw.circle(DEFAULT_SLIDER_KNOB_SURF,GRAY,(DEFAULT_KNOB_RADIUS,DEFAULT_KN
 DEFAULT_SLIDER_BORDER = 2
 
 
-class Slider(ClickBinder,ValueMixin):
+class Slider(ValueMixin,ClickBinder):
 	def __init__(self,start,stop,slider_id):
 		ValueMixin.__init__(self,0)
 		self.start = start
