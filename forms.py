@@ -36,5 +36,6 @@ class ReceiverForm(Form):
 	def receive(self,data):
 		for receiver in data:
 			self.receivers[receiver].set_value(data[receiver])
+			self.receivers[receiver].draw()
 	def add_receiver(self,receiver):
 		self.receivers[receiver.get_id()] = receiver

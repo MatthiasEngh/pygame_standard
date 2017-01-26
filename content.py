@@ -174,6 +174,9 @@ class Text(Component,ValueMixin):
 		rect.topleft = pos
 		Component.__init__(self,rect,ID,image)
 		ValueMixin.__init__(self,text)
+	def draw(self):
+		self.image.fill(BLACK)
+		self.image.blit(self.font.render(str(self.value),DEFAULT_FONT_AA,DEFAULT_FONT_COLOR,DEFAULT_FONT_BG),(0,0))
 
 
 
