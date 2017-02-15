@@ -6,9 +6,12 @@ from pygame_standard.matplotliblib import MatplotlibEngine
 import numpy as np
 
 
+# Create a window
 size = (600,600)
 window = Window(size)
 
+
+# Create the active Screen engine
 plot_data = np.random.random(100)
 data_field_id = "plot_data"
 data_field = ArrayField(data_field_id,plot_data)
@@ -21,6 +24,7 @@ plotting_engine = MatplotlibEngine(screen_id="plot",plot_size=(400,400),data_fie
 plotting_engine.add_response(plot_response_id,data_field_response,data_field_id)
 window.add_engine(plotting_engine)
 
+# Create the interface Screen
 interface_screen = Screen(screen_id="interface")
 cb_pos =(50,50)
 cb_text = "button"

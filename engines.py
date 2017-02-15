@@ -27,6 +27,8 @@ class Field:
 		return self.version
 	def set_value(self,value):
 		self.value = value
+		self.update_version()
+	def update_version(self):
 		self.version += 1
 	def get_value(self):
 		return self.value
@@ -45,6 +47,24 @@ class Field:
 		return len(self.subjects) > 0
 	def get_subjects(self):
 		return self.subjects
+
+
+class SimpleFieldMixin:
+	def update_value(self,value):
+		self.set_value(value)
+
+class SimpleUpdateCheckMixin:
+	is_new = True
+	def update_version(self):
+		self.is_new = True
+	def has_changed(self,version=None):
+		is_new = self.is_new
+		self.is_new = False
+		return  is_new
+
+
+class ButtonField(Field,SimpleFieldMixin,SimpleUpdateCheckMixin):
+	pass
 
 
 
@@ -92,6 +112,9 @@ class DefaultFieldManager:
 			if cid in self.masters:
 				for subject in self.masters[cid]:
 					subject.update_value(data[cid])
+	def apply_mechanic(self,mechanic):
+		pass
+
 
 
 
@@ -113,8 +136,6 @@ class DefaultEngine:
 	def add_entity(self,entity):
 		self.screen.add_component(entity)
 		self.entity_m.add_entity(entity)
-	def add_response(self,event_id,response_fn,field_id):
-		self.fields_m.add_response(event_id,response_fn,field_id)
 	def add_field(self,field):
 		self.fields_m.add_field(field)
 	def add_fields(self,fields):
@@ -124,12 +145,14 @@ class DefaultEngine:
 			self.mechanics.append(mechanic)
 		else:
 			self.mechanics.insert(index,mechanic)
+	def add_mechanics(self,mechanics):
+		for mechanic in mechanics:
+			self.add_mechanic(mechanic)
 	def get_screen(self):
 		return self.screen
 	def calculate(self):
 		for mechanic in self.mechanics:
-			field_data = self.fields_m.get_calcdata(mechanic)
-			self.fields_m.update(mechanic)
+			self.fields_m.apply_mechanic(mechanic)
 	def update_fields(self,data):
 		self.fields_m.update_fields(data)
 
